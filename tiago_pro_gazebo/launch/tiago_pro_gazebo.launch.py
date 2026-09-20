@@ -70,6 +70,10 @@ class LaunchArguments(LaunchArgumentsBase):
     moveit: DeclareLaunchArgument = CommonArgs.moveit
     world_name: DeclareLaunchArgument = CommonArgs.world_name
     tuck_arm: DeclareLaunchArgument = CommonArgs.tuck_arm
+    tuck_arm_motion: DeclareLaunchArgument = DeclareLaunchArgument(
+        name='tuck_arm_motion',
+        default_value='home',
+        description='Motion name to tuck the arm to (e.g. home, custom_home)')
     is_public_sim: DeclareLaunchArgument = CommonArgs.is_public_sim
     namespace: DeclareLaunchArgument = CommonArgs.namespace
     rviz: DeclareLaunchArgument = CommonArgs.rviz
@@ -249,6 +253,7 @@ def declare_actions(
         executable='tuck_arm.py',
         emulate_tty=True,
         output='both',
+        parameters=[{'motion_name': LaunchConfiguration('tuck_arm_motion')}],
         condition=IfCondition(LaunchConfiguration('tuck_arm'))
     )
 

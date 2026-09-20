@@ -28,6 +28,7 @@ class PlayMotionActionClient(Node):
 
     def __init__(self):
         super().__init__("arm_tucker")
+        self.declare_parameter("motion_name", "home")
         self._play_motion_client = ActionClient(self, PlayMotion2, "play_motion2")
         self._is_ready_client = self.create_client(
             IsMotionReady, "/play_motion2/is_motion_ready"
@@ -37,14 +38,14 @@ class PlayMotionActionClient(Node):
     def is_successful(self):
         return self._is_successful
 
-    def wait_for_server(self):
+    def wait_for_server(self, motion_name="home"):
         self._play_motion_client.wait_for_server()
 
         while not self._is_ready_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().error("is_ready service not ready, waiting...")
 
         request = IsMotionReady.Request()
-        request.motion_key = "home"
+        request.motion_key = motion_name
 
         is_ready = False
         while not is_ready:
@@ -111,15 +112,16 @@ def main(args=None):
     rclpy.init(args=args)
 
     action_client = PlayMotionActionClient()
+    motion_name = str(action_client.get_parameter("motion_name").value)
 
-    action_client.wait_for_server()
+    action_client.wait_for_server(motion_name=motion_name)
 
     for i in range(5):
-        action_client.get_logger().info("Tucking arm... Try {}".format(i))
-        action_client.send_goal("home", True)
+        action_client.get_logger().info("Tucking arm (motion: {})... Try {}".format(motion_name, i))
+        action_client.send_goal(motion_name, True)
 
         if action_client.is_successful():
-            action_client.get_logger().info("Arm tucked")
+            action_client.get_logger().info("Arm tucked successfully")
             break
         else:
             action_client.get_logger().error("Tuck failed")
